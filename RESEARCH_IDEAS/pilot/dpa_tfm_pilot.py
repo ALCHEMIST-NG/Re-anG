@@ -15,7 +15,8 @@ The kNN baseline uses the same vote-margin accounting over its K neighbours
 see caveats in PILOT_REPORT.md.
 
 Usage:
-  python dpa_tfm_pilot.py DATA_DIR OUT_JSON [--n-train 4000] [--n-test 500]
+  python dpa_tfm_pilot.py DATA_DIR OUT_JSON [--n-train 4000] [--n-test 500] [--tfm v1]
+  (Kaggle GPU: --tfm tabpfn,tabicl)
 """
 
 import argparse
@@ -75,15 +76,37 @@ def cert_curve(pred, radius, y):
     return {r: float(np.mean((pred == y) & (radius >= r))) for r in RADII}
 
 
-def make_learners(tabpfn_cls):
+def make_tfms(names):
+    """In-context tabular learners. All are deterministic given a fixed seed,
+    which DPA requires of its base learner.
+      v1     : TabPFN v1 (pip tabpfn==0.1.11 + checkpoint), CPU-capable, <=1000 rows/10 classes
+      tabpfn : current TabPFN (pip tabpfn>=2); needs licence acceptance + TABPFN_TOKEN on Kaggle
+      tabicl : TabICL (pip tabicl), BSD-3, weights auto-downloaded from Hugging Face
+    """
+    tfms = {}
+    for name in [n for n in names.split(",") if n]:
+        if name == "v1":
+            from tabpfn import TabPFNClassifier as V1
+            tfms["TabPFNv1"] = lambda V1=V1: V1(device="cpu", N_ensemble_configurations=4, seed=0)
+        elif name == "tabpfn":
+            from tabpfn import TabPFNClassifier as TP
+            tfms["TabPFN"] = lambda TP=TP: TP(n_estimators=4, random_state=0, device="auto")
+        elif name == "tabicl":
+            from tabicl import TabICLClassifier as TI
+            tfms["TabICL"] = lambda TI=TI: TI(n_estimators=4, random_state=0)
+        else:
+            raise ValueError(f"unknown TFM {name}")
+    return tfms
+
+
+def make_learners(tfms):
     learners = {
         "LogReg": lambda: make_pipeline(StandardScaler(), LogisticRegression(max_iter=2000)),
         "HGB": lambda: HistGradientBoostingClassifier(random_state=0),
         "HGB-small": lambda: HistGradientBoostingClassifier(min_samples_leaf=5, max_leaf_nodes=15, random_state=0),
         "RF": lambda: RandomForestClassifier(n_estimators=200, random_state=0, n_jobs=-1),
     }
-    if tabpfn_cls is not None:
-        learners["TabPFNv1"] = lambda: tabpfn_cls(device="cpu", N_ensemble_configurations=4, seed=0)
+    learners.update(tfms)
     return learners
 
 
@@ -115,12 +138,12 @@ def knn_curves(Xtr, ytr, Xte, yte, n_classes):
     return out
 
 
-def run_dataset(path, args, tabpfn_cls):
+def run_dataset(path, args, tfms):
     name = os.path.basename(path).split(".")[0]
     Xtr, Xte, ytr, yte, C = load(path, args.n_train, args.n_test, args.seed)
     res = {"dataset": name, "n_train": len(Xtr), "n_test": len(Xte), "n_classes": C,
            "n_features": Xtr.shape[1], "dpa": {}, "knn": knn_curves(Xtr, ytr, Xte, yte, C), "timing_s": {}}
-    learners = make_learners(tabpfn_cls)
+    learners = make_learners(tfms)
     for m in PART_SIZES:
         k = max(2, len(Xtr) // m)
         ids = hash_partition(Xtr, ytr, k)
@@ -159,13 +182,10 @@ def main():
     ap.add_argument("--n-test", type=int, default=500)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--datasets", default="")
-    ap.add_argument("--no-tabpfn", action="store_true")
+    ap.add_argument("--tfm", default="v1", help="comma list of v1,tabpfn,tabicl; empty for baselines only")
     args = ap.parse_args()
 
-    tabpfn_cls = None
-    if not args.no_tabpfn:
-        from tabpfn import TabPFNClassifier
-        tabpfn_cls = TabPFNClassifier
+    tfms = make_tfms(args.tfm)
 
     paths = sorted(glob.glob(os.path.join(args.data_dir, "*.tsv.gz")))
     if args.datasets:
@@ -173,7 +193,7 @@ def main():
         paths = [p for p in paths if os.path.basename(p).split(".")[0] in keep]
     results = []
     for p in paths:
-        results.append(run_dataset(p, args, tabpfn_cls))
+        results.append(run_dataset(p, args, tfms))
         with open(args.out_json, "w") as f:
             json.dump({"args": vars(args), "results": results}, f, indent=1)
 

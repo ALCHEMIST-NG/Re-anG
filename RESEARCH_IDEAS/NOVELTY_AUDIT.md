@@ -96,7 +96,7 @@ I do not use "first ever" or "completely unexplored". Where I write "no work fou
 | 4 | Graf et al., *FlowState*, 2025 | PP | Sampling-rate-equivariant TSFM; states existing TSFMs lack adaptability to sampling rates. | New architecture; equivariance to *sampling rate*, not coherence across *aggregation levels* of one series; no audit of other TSFMs' incoherence (per abstract). **Highest overlap.** |
 | 5 | Chen et al., SATS scale-aware pretraining, 2026 | PP | Scale handling in pretraining. | Architecture/pretraining method. |
 | 6 | TimeFound, arXiv 2503.04118 | PP | Multi-resolution patching. | In-model, not output coherence. |
-| 7 | Woo et al., Moirai, ICML 2024 | PR | Frequency-specific patch sizes. | Design choice, not coherence audit. (From prior knowledge; not re-verified in this session.) |
+| 7 | Woo et al., Moirai, ICML 2024 (PMLR v235, arXiv 2402.02592) | PR | Names cross-frequency learning as a core challenge (multi-patch-size design per the paper; mechanism detail not re-read here). | Design choice, not coherence audit. |
 | 8 | Das et al., TimesFM, ICML 2024 | PR | Claims work across granularities. | No coherence measurement. |
 | 9 | arXiv 2506.19633 (temporal-hierarchy coherent architecture, M5) | PP | Coherent multi-level forecasting. | Trained model; no FM. |
 | 10 | arXiv 2507.22053 (FMs + hierarchical ensemble on M5) | PP | FMs incl. Chronos in hierarchical forecasting. | **Cross-sectional** hierarchy (store/category), not temporal. |

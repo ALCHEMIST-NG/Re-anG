@@ -93,3 +93,12 @@ Conventions:
 | 4.15 | WS-ext | `effect of ECG preprocessing bandpass filter settings on deep learning classification performance cross-dataset ...` | No head-to-head 0.5–40 Hz vs 0.05–150 Hz study for DL or FMs. *Preprocessing Selection for DL Classification of Arrhythmia* (*Technologies* 2023) `[PR]`: little information above 40–50 Hz for arrhythmia; notch had no significant effect. Multi-dataset ECG training (*Sensors* 2026) `[PR]`. |
 | 4.16 | WS-std | `data poisoning for in-context learning ICLPoison ...; ICLAttack ...` | Verified: Zhao et al., *Universal Vulnerabilities in LLMs: Backdoor Attacks for In-context Learning*, EMNLP 2024, pp. 11507–11522, DOI 10.18653/v1/2024.emnlp-main.642 `[PR]` (ASR 95% avg). ICLPoison (He et al. 2024) **not verified** by search. |
 | 4.17 | WS-ext | `"Retrieval & Fine-Tuning for In-Context Tabular Models" LoCalPFN ...` | Verified: Thomas et al., NeurIPS 2024 (arXiv 2406.05207) `[PR]`: kNN-retrieved local context for TabPFN; ≥100 neighbours suffices; IQM AUC 0.958 on 95 OpenML datasets vs XGBoost 0.943. Relevant to C1 (small contexts stay accurate) and C2 (retrieval amplifies targeted poisoning). |
+
+## Phase 5 — Citation verification and pilot environment
+
+| # | Tool | Query / action | Result |
+|---|---|---|---|
+| 5.1 | pip download | `tabpfn` 9.2.0, `tabicl` 2.2.0 wheels (source read, not installed) | TabPFN code Apache-2.0; weights: TabPFN-2 Prior Labs License (Apache-2.0 + attribution), TabPFN-2.5/2.6/3/3.5 non-commercial; headless use needs licence acceptance at ux.priorlabs.ai + `TABPFN_TOKEN`. TabICL BSD-3-Clause, weights auto-download from Hugging Face. Constructor signatures recorded in `pilot/dpa_tfm_pilot.py`. |
+| 5.2 | curl | PMLB datasets | `raw.githubusercontent.com` returns Git-LFS pointers (131 B); `media.githubusercontent.com/media/EpistasisLab/pmlb/master/datasets/<name>/<name>.tsv.gz` returns data. 10 datasets downloaded to scratchpad (not committed). |
+| 5.3 | WS-std | Hollmann et al. Nature 2025; TabICL | Verified: *Accurate predictions on small data with a tabular foundation model*, Nature 637(8045):319–326, 2025, DOI 10.1038/s41586-024-08328-6 `[PR]`. TabICL: arXiv 2502.05564 `[PP]`; ICML 2025 venue **not verified**. |
+| 5.4 | WS-std | Moirai | Verified: Woo et al., *Unified Training of Universal Time Series Forecasting Transformers*, ICML 2024, PMLR 235:53140–53164 `[PR]`. |

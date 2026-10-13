@@ -34,3 +34,24 @@ Scripts: `dpa_tfm_pilot.py` (experiment), `summarize_pilot.py` (tables). Raw res
 ## Results
 
 (Filled in from `summarize_pilot.py` output below.)
+
+---
+
+# C3 pipeline validation (no TSFM; seasonal-naive stand-in)
+
+Purpose: make sure the coherence and reconciliation code is correct before spending Kaggle time on Chronos. This is **not** evidence about TSFMs.
+
+Setup: ETTh1, ETTh2 (hourly) and ETTm1, ETTm2 (15-min summed to hourly), 7 columns each = 28 series; 20 day-aligned origins per series in the last 25% of each series, one week apart; context 84 days; horizon 48 h; levels 1, 2, 3, 4, 6, 8, 12, 24 h; THieF structural-scaling WLS reconciliation per 24-h block. Script: `tsfm_coherence_pilot.py --forecaster snaive`.
+
+| level (h) | coherence gap (mean fc) | gap (median fc) | MASE direct | MASE bottom-up | MASE THieF | THieF better than direct |
+|---|---|---|---|---|---|---|
+| 1 | 0.000 | 0.000 | 1.968 | 1.968 | 1.974 | 0.49 |
+| 2 | 0.000 | 0.000 | 1.446 | 1.446 | 1.449 | 0.50 |
+| 3 | 0.000 | 0.000 | 1.182 | 1.182 | 1.200 | 0.51 |
+| 4 | 0.000 | 0.000 | 1.032 | 1.032 | 1.054 | 0.51 |
+| 6 | 0.000 | 0.000 | 0.878 | 0.878 | 0.899 | 0.50 |
+| 8 | 0.000 | 0.000 | 0.711 | 0.711 | 0.733 | 0.52 |
+| 12 | 0.000 | 0.000 | 0.800 | 0.800 | 0.791 | 0.53 |
+| 24 | 0.215 | 0.215 | 1.612 | 1.013 | 0.997 | 0.71 |
+
+Reading: seasonal-naive with season 24/a is coherent by construction for a ≤ 12, and the measured gap is exactly 0 there, so the metric is correct. At a = 24 the season switches to 7 days, which creates genuine incoherence (0.215). Reconciliation then helps (71% of cases), as temporal-hierarchy theory predicts. The pipeline is ready for Chronos on Kaggle (`KAGGLE_RUNBOOK.md`, backup section).

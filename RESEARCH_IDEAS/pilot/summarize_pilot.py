@@ -74,6 +74,39 @@ def main(paths):
                 print(f"| {L} | " + " | ".join(f"{a:.3f}" for a in accs) + f" | {accs[3] / accs[0]:.3f} |")
             print()
 
+    # Does per-partition accuracy alone explain certified accuracy? Pool all
+    # (dataset, seed, m, learner) cells at r=5 with a non-degenerate certificate,
+    # fit cert ~ a + b * part_acc within each (dataset, seed, m) group by
+    # demeaning, and report each learner's mean residual. A positive residual
+    # means the learner certifies more than its partition accuracy predicts
+    # (more consistent votes across partitions).
+    print("## Accuracy vs. vote stability (r = 5)\n")
+    resid = defaultdict(list)
+    xs, ys = [], []
+    groups = []
+    for run in runs:
+        for res in run["results"]:
+            for m in (400, 200, 100, 50):
+                cells = [(k.split("|")[0], v["mean_partition_acc"], v["cert"]["5"])
+                         for k, v in res["dpa"].items() if k.endswith(f"|m{m}")]
+                if not cells or max(c[2] for c in cells) < 0.05:
+                    continue
+                pa = np.array([c[1] for c in cells]); ce = np.array([c[2] for c in cells])
+                groups.append((cells, pa - pa.mean(), ce - ce.mean()))
+                xs.extend(pa - pa.mean()); ys.extend(ce - ce.mean())
+    xs, ys = np.array(xs), np.array(ys)
+    b = float(xs @ ys / (xs @ xs)) if len(xs) and xs @ xs > 0 else float("nan")
+    for cells, dx, dy in groups:
+        for (L, _, _), x, y in zip(cells, dx, dy):
+            resid[L].append(y - b * x)
+    r_within = float(np.corrcoef(xs, ys)[0, 1]) if len(xs) > 2 else float("nan")
+    print(f"Within-group slope b = {b:.2f}, within-group correlation = {r_within:.2f}, groups = {len(groups)}\n")
+    print("| Learner | mean residual cert@5 (pp) | n cells |")
+    print("|---|---|---|")
+    for L, v in sorted(resid.items(), key=lambda kv: -np.mean(kv[1])):
+        print(f"| {L} | {100 * np.mean(v):+.2f} | {len(v)} |")
+    print()
+
     n = sum(len(run["results"]) for run in runs)
     print(f"## Aggregate over {n} dataset-runs (best-over-k per learner)\n")
     print("| radius r | best TFM best overall | best TFM beats all non-TFM DPA learners | kNN >= every DPA learner | median margin (best TFM − best non-TFM incl. kNN) |")

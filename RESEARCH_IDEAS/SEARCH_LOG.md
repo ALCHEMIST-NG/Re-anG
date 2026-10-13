@@ -105,3 +105,10 @@ Conventions:
 | 5.5 | pip download | `chronos-forecasting` 2.3.2 wheel (source read) | `BaseChronosPipeline.from_pretrained`, `predict_quantiles(inputs, prediction_length, quantile_levels)` → `(quantiles, mean)`; for Chronos-Bolt the returned "mean" **is the median** (source comment). Implication for C3 recorded in `CANDIDATE_IDEAS.md`. |
 | 5.6 | curl | ETT datasets | `raw.githubusercontent.com/zhouhaoyi/ETDataset/main/ETT-small/ETT{h1,h2,m1,m2}.csv` reachable; used for C3 pipeline validation. |
 | 5.7 | WS-ext | `partition aggregation certified poisoning robustness base learner stability prediction consistency ... vote margin` | Prior work (DPA; FA, ICML 2022 PMLR v162; COPA; collective bagging; TPA-NLG 2026) analyses certificates only via vote counts and requires a deterministic base learner; **no source ties base-learner stability to certificate size beyond determinism** (supports J1 angle). FA improves DPA modestly on MNIST (94.12% → 94.38% at d=8, partial table). |
+
+## Phase 6 — Pilots (13 Oct 2026, cloud container CPU only)
+
+| # | Pilot | Outcome |
+|---|---|---|
+| 6.1 | C1 core mechanism: DPA with TabPFN v1 vs RF / HGB / HGB-small / LR, plus kNN vote-margin certificates; 10 PMLB datasets, 4,000/500 split, seed 0 | TabPFN v1 best certified accuracy on 4/10 (r=5) and 3/10 (r=10) datasets; median margin −1.5 / −2.5 pp. Certified accuracy tracks per-partition accuracy (within-group slope 0.99, r 0.86). TabPFN v1's margin predicted by its 50-row accuracy advantage (Spearman 0.79 / 0.96). Details: `pilot/PILOT_REPORT.md`; raw: `pilot/results/c1_tabpfnv1_seed0.json`. |
+| 6.2 | C3 pipeline validation with seasonal-naive stand-in; ETTh1/2, ETTm1/2 (28 series × 20 origins) | Coherence gap exactly 0 where coherent by construction (levels 1–12), 0.215 at level 24; THieF better than direct in 71% of cases at level 24. Validates code only. Raw: `pilot/results/c3_snaive_validation.json`. |

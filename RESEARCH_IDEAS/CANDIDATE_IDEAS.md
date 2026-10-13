@@ -12,7 +12,7 @@ Deadline context: 7th ICEEICT paper deadline is **25 Oct 2026** (12 days from 13
 
 | ID | Working title (short) | Primary track | Novelty after audit | Feasible by 25 Oct? | Journal upside |
 |---|---|---|---|---|---|
-| **C1** | Certified context-poisoning robustness of tabular in-context learners via partitioned contexts | Computer Network & Security (alt. AI & Data Analytics) | Strongest: no certified-poisoning work for any in-context learner found | Yes (inference-only, Kaggle GPU or CPU) | High |
+| **C1** | Certified context-poisoning robustness of tabular in-context learners via partitioned contexts | Computer Network & Security (alt. AI & Data Analytics) | Strongest: no certified-poisoning work for any in-context learner found | Yes (inference-only, Kaggle GPU or CPU); **CPU pilot with TabPFN v1 did not support the headline, mechanism confirmed** | High |
 | C2 | Targeted context poisoning of tabular ICL (full-context vs retrieval-context) in intrusion detection | Computer Network & Security | Moderate: attack side is the obvious first step; one unreviewed repo already tried it | Yes | Medium (best merged into C1) |
 | **C3** | Temporal (in)coherence of zero-shot time-series foundation models across aggregation levels | AI & Data Analytics (alt. Power, Energy & Climate) | Good: no audit of existing TSFMs found; mechanism-level novelty needs the pretraining-frequency analysis | Yes (inference-only) | Medium-High |
 | C4 | Distinguishability-calibrated evaluation of ML false-data-injection detectors | Power, Energy & Climate Nexus / Computer Network & Security | Moderate: theory exists in control/IT; no ML-benchmark audit found; "obviousness" risk | Tight (needs attack-recipe survey) | Medium-High |
@@ -44,12 +44,14 @@ Deadline context: 7th ICEEICT paper deadline is **25 Oct 2026** (12 days from 13
 3. It is unknown whether TFMs keep their accuracy advantage when contexts are cut to the 50–500 rows that partitioning requires. LoCalPFN suggests ≥100 local rows suffice, but that holds for *retrieved* neighbours, not random hash partitions.
 
 **F. Proposed novelty.**
-- First certified-poisoning evaluation of in-context learners.
+- A certified-poisoning evaluation of in-context learners, for which the searches found no precedent (claim 1.1 in `NOVELTY_AUDIT.md`, partially verified).
 - An empirical test of LDC / data-to-sample-complexity predictions with in-context learners, using per-partition learning curves to *predict* the certified-robustness curve before running DPA.
 - A practical, compute-aware recipe (choose k from the TFM learning curve), with a security case study on IDS data.
 - The aligned robustness-and-efficiency observation (partitioning lowers cost for quadratic-attention ICL), if confirmed.
 
 **G. Supporting evidence.** SEARCH_LOG 1.5, 1.6, 3.1, 3.3, 3.4, 3.6, 3.7, 3.8, 4.3–4.6, 4.17 (LoCalPFN). The unreviewed PriorPoison repo (1 dataset, 1 seed) reports attack success 1.00 with three injected copies per target against "TabPFN-3.5". If replicated, that would show undefended TFMs are highly poisonable, which motivates certification.
+
+**G2. Pilot evidence (13 Oct 2026, CPU, TabPFN v1, 10 PMLB datasets, 1 seed; `pilot/PILOT_REPORT.md`).** *Against the headline:* TabPFN v1 gives the best certificate on only 4/10 datasets at r = 5 and 3/10 at r = 10 (median margin −1.5 / −2.5 pp); random forest, small-leaf GBDT, logistic regression and kNN each win somewhere. *For the mechanism:* certified accuracy tracks per-partition accuracy almost one-for-one (within-group slope 0.99, r = 0.86), and TabPFN v1's certificate margin is predicted by its accuracy advantage on 50-row partitions (Spearman 0.79 at r = 5, 0.96 at r = 10), as the Lethal Dose Conjecture predicts. A hypothesised "vote-stability bonus" beyond accuracy did not survive (residuals ≤ 0.5 pp). Net: C1's outcome now hinges on whether *current* TFMs (TabPFN v2+, TabICL) are more accurate than RF/GBDT at 50–100 rows, which the Kaggle runbook tests in about an hour.
 
 **H. Closest existing work** (full list and comparison in `NOVELTY_AUDIT.md`):
 - *DPA* (ICLR 2021): same certificate mechanism; base learners are trained CNNs on images. We change the base-learner class, which is the lever LDC identifies, and test a quantitative prediction.
@@ -75,12 +77,12 @@ Deadline context: 7th ICEEICT paper deadline is **25 Oct 2026** (12 days from 13
 
 **L. Principal risks.**
 - *Novelty:* fast-moving area; a parallel preprint could appear. Mitigate by moving fast and framing around the LDC test, not just "DPA + TabPFN".
-- *Feasibility:* if TFM accuracy drops sharply on random small partitions, H1 fails. That is still reportable as a negative LDC result, but weaker for a conference.
+- *Feasibility / empirical risk (now the main risk):* the v1 pilot already failed H1. If TabPFN v2+/TabICL also fail to lead at 50–100 rows, the paper reduces to "LDC holds on tabular data, choose the base learner by small-sample accuracy". That is still a correct and useful result, but thin for a strong submission.
 - *Evaluation:* certificates on tabular data may be numerically small (single- or double-digit poisons). Absolute numbers must be read relative to N.
 - *Reproducibility:* model licences and version drift (TabPFN 2→3.5). Pin versions.
 - *Reviewer objection* "just a different base learner": answer with the prediction test (H3) and the efficiency argument.
 
-**M. Publication potential.** Best ICEEICT candidate (Computer Network & Security track): clear question, deterministic metric, cheap. Also the seed of a strong journal paper (see `FINAL_RECOMMENDATION.md`, J1).
+**M. Publication potential.** Best ICEEICT candidate on novelty (Computer Network & Security track): clear question, deterministic metric, cheap, code ready. Conditional on the Kaggle go/no-go (see `FINAL_RECOMMENDATION.md`), because the v1 pilot did not support the headline. Also the seed of a strong journal paper (see `FINAL_RECOMMENDATION.md`, J1).
 
 ---
 

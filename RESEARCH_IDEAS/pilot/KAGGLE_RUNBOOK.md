@@ -56,7 +56,11 @@ If TabPFN licensing blocks you, run `--tfm tabicl` alone first; that is already 
 
 **No-go (switch to backup C3)** if TFMs win on fewer than 40% of dataset-seeds at both radii, or if the median margin is ≤ 0.
 
-In between, it is a judgement call: inspect *why* (per-partition accuracy vs vote agreement) before deciding. A "stability, not accuracy, drives certificates" finding could reshape C1 rather than kill it (see `FINAL_RECOMMENDATION.md`).
+In between, it is a judgement call. Inspect per-partition accuracy at m = 50/100 first, because the CPU pilot showed it predicts the certificate margin (Spearman 0.79–0.96).
+
+**For reference, TabPFN v1 on the CPU pilot fails this rule** (best on 4/10 datasets at r = 5, 3/10 at r = 10; median margin −1.5 pp at r = 5). The "vote-stability" idea mentioned earlier did not survive the full pilot (residuals ≤ 0.5 pp), so do not count on it to rescue a no-go.
+
+**Day-1 plan: run Cell 4 for C1 and the C3 backup cells below in the same session.** Decision order: C1 passes → C1. C1 fails and C3 passes → C3. Both fail → C1 in its fallback form (certified-robustness benchmark for tabular IDS plus the small-sample selection rule), which is guaranteed to have content but is the weakest of the three outcomes.
 
 ---
 

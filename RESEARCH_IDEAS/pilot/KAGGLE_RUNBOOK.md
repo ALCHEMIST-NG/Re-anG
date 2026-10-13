@@ -57,3 +57,22 @@ If TabPFN licensing blocks you, run `--tfm tabicl` alone first; that is already 
 **No-go (switch to backup C3)** if TFMs win on fewer than 40% of dataset-seeds at both radii, or if the median margin is ≤ 0.
 
 In between, it is a judgement call: inspect *why* (per-partition accuracy vs vote agreement) before deciding. A "stability, not accuracy, drives certificates" finding could reshape C1 rather than kill it (see `FINAL_RECOMMENDATION.md`).
+
+---
+
+# Backup: C3 temporal-coherence pilot (run only if C1 is no-go)
+
+Same notebook settings (GPU optional; Chronos-Bolt runs on CPU too). About 10–20 minutes (estimate).
+
+```python
+!pip -q install chronos-forecasting pandas
+!mkdir -p ts && cd ts && for f in ETTh1 ETTh2 ETTm1 ETTm2; do \
+  curl -sSL -o $f.csv https://raw.githubusercontent.com/zhouhaoyi/ETDataset/main/ETT-small/$f.csv; done
+for model in ["amazon/chronos-bolt-small", "amazon/chronos-bolt-base"]:
+    !python Re-anG/RESEARCH_IDEAS/pilot/tsfm_coherence_pilot.py ts coh_{model.split('/')[-1]}.json --forecaster chronos:{model} --n-origins 20
+!python Re-anG/RESEARCH_IDEAS/pilot/tsfm_coherence_pilot.py ts coh_snaive.json --forecaster snaive --n-origins 20
+```
+
+Pipeline already validated in the Claude container with the seasonal-naive stand-in (`PILOT_REPORT.md`, C3 section): its gap is exactly 0 at levels 1–12, where it is coherent by construction.
+
+**C3 go rule:** median coherence gap (mean forecasts) ≥ 0.05 at three or more levels **and** THieF beats direct forecasts in ≥ 60% of cases at three or more levels for at least one Chronos model. Otherwise the phenomenon is too small for a paper.
